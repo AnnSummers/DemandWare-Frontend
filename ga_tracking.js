@@ -339,6 +339,10 @@
             });
         });
     }
+    //Sign-up pop-up
+    if ( $.inArray('eml_fld', getUrlVars(window.location.href)) > -1 && _uv.page.breadcrumb[0].toLowerCase() == 'my acount') {
+        ga('liveTracker.send', 'event', 'Login/Register', 'Pop-up Viewed', 'Newsletter Sign-up Pop-up Viewed');
+    }
     //Registration sign-up
     if ( $.inArray('registration', getUrlVars(window.location.href)) > -1 && _uv.page.breadcrumb[0].toLowerCase() == 'my acount') {
         ga('liveTracker.send', 'event', 'Login/Register', 'Account Registered', 'New Account Created');
