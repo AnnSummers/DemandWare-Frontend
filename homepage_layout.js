@@ -9,7 +9,6 @@ function waitForPlugin(method) {
 }
 
 defer(function($){
-
     waitForPlugin(function(as_slider){
         jQuery().as_slider = as_slider;
         window.initSlider = function (el) {
@@ -58,41 +57,39 @@ defer(function($){
         $('.js-sextoy_slider').click(function(){ initSlider( this ) });
         $('.js-erotic_slider').click(function(){ initSlider( this ) });
 
+        $('#horizontal-carousel').as_slider({
+          speed: 800,
+          slidesToShow: 6,
+          slidesToScroll: 6,
+          responsive: [
+            {
+              breakpoint: 1024,
+              settings: {
+                slidesToShow: 4,
+                slidesToScroll: 4
+              }
+            },
+            {
+              breakpoint: 800,
+              settings: {
+                slidesToShow: 3,
+                slidesToScroll: 3
+              }
+            },
+            {
+              breakpoint: 580,
+              settings: {
+                slidesToShow: 2,
+                slidesToScroll: 2
+              }
+            }
+          ]
+        });
+
         $('.topspot__slider').as_slider({
             dots: true,
             autoplay: true,
             autoplaySpeed: 4000
         });
-    });
-
-    $(document).ready(function(){
-        $('.youtube_video').each(function() {
-            var vw = $(window).width(),
-                tgt = vw > 620 ? $(this).data('target') : this,
-                my_id = 'yt_' + Math.floor(Math.random()*90000) + 10000;
-
-            $(window).resize(function() {
-                vw = $(window).width()
-            });
-
-            // Overlay the Play icon to make it look like a video player
-            $(this).append($('<div/>', {'class': 'play'}));
-
-            $(document).delegate('#'+this.id, 'click', function() {
-                // Create an iFrame with autoplay set to true
-                var iframe_url = 'https://www.youtube.com/embed/' + this.id + '?autoplay=1&autohide=1';
-                if ($(this).data('params')) iframe_url+='&'+$(this).data('params');
-                // The height and width of the iFrame should be the same as parent
-                var iframe = $('<iframe/>', {'id': my_id, 'frameborder': '0', 'src': iframe_url, 'width': $(tgt).width(), 'height': $(tgt).height(), 'class':'youtube_embed' })
-
-                // Replace the YouTube thumbnail with YouTube HTML5 Player
-                $(tgt).append(iframe).hide().fadeIn(1000);
-                $(tgt).append('<div class="yt_close" id="'+my_id+'_btn"><span>x</span> CLOSE</div>');
-                $('#'+my_id+'_btn').click(function(){
-                    $('#'+my_id+', #'+my_id+'_btn').remove();
-                });
-            });
-        });
-
     });
 });
