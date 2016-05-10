@@ -1,0 +1,214 @@
+$include('Page-Include', 'cid', '__editorial-header')$
+<style>
+.nopadding {padding-left:0;padding-right:0;}
+.padding-sm {padding-left:10px;padding-right:10px;}
+.service_image {display:block;}
+.service_description {font-size:0.8em; color:#999; margin-bottom:15px;}
+.service_description ul li {font-size:1.2em;}
+.service_footer {text-align:center; color:#BFBFBF; background-color:#515151; padding-top:30px; padding-bottom:30px;}
+.service_footer h2, .service_footer h3, .service_footer h4, .service_footer h5 {color:#fff;}
+.service_footer_info {font-weight:normal; font-size:1.1em; margin-bottom:30px;}
+.service_tabs {border-bottom: 1px solid #000; margin-bottom:30px;}
+.service_tabs .nopadding {margin-bottom:0 !important;}
+.service_btn {width:96%; padding:20px; display:block; box-sizing:border-box; border:1px solid #525252; border-bottom: 1px solid #000; background-color:#efefef; padding-top:12px; padding-bottom:10px; margin-right:4%; margin-bottom:-1px;font-size:1.3em; color:#525252; text-align:center; box-shadow:inset 0px -2px 1px rgba(0,0,0,0.3); border-top-left-radius: 3px; border-top-right-radius: 3px; letter-spacing:3px; font-weight:bold;}
+.service_email {border: 2px solid #fff; color:#fff !important; display: inline-block;padding: 8px 18px;margin-bottom: 8px;background-color: rgba(255,255,255,0.1); text-decoration:none !important;}
+.service_address {color:#fff;}
+.service_heading {margin-bottom:0px;}
+.service_heading h5 {margin-bottom:0px;}
+.brand_heading {text-transform:uppercase;letter-spacing:2px;}
+.service_email:hover{border:2px solid #fff; border: 2px solid #E91E63}
+.service_btn:hover {color:#000; text-decoration:none !important; background-color:#FFF; box-shadow:none;}
+.service_btn--active {color:#000; border-color:#000; background-color:#fff; border-bottom:1px solid #fff; box-shadow:none; cursor:default;}
+@media screen and (max-width:767px){.pull-right{float: none!important;} .service_btn{font-size:1.1em;} .service_description{margin-bottom:0 !important; padding:0 20px !important;} .service_footer .col-xs-12.col-sm-4 {border-top: 1px solid #737373;
+    padding-top: 15px;}.service_address {background-color:#717171;border-radius:3px; padding:5px;}}
+@media screen and (max-width:580px){.service_btn{font-size:1em; line-height:1.2; letter-spacing:1px;} .text-break{display:block}}
+</style>
+<div class="editorial" id="article_top">
+    <div class="article_header">
+        <div class="article_headline">
+            <h1>Help Hub - Customer Services</h1>
+            <p>Dont be shy! We're here to help.</p>
+        </div>
+    </div>
+
+    <div class="col-row">
+        <div class="col-xs-12 nopadding">
+            <div class="col-xs-12 padding-sm service_tabs">
+                <h3>How did you shop with us?</h3>
+                <div class="col-xs-6 nopadding">
+                    <a href="" class="service_btn service_btn--active">IN STORE /<span class="text-break"> </span>ONLINE</a>
+                </div>
+                <div class="col-xs-6 nopadding">
+                    <a href="" class="service_btn">AT A<span class="text-break"> </span>PARTY</a>
+                </div>
+            </div>
+
+            <div class="col-xs-12 col-sm-6 col-md-4 padding-sm">
+                <div class="col-xs-3 col-md-4 nopadding service_image">
+                    <img src="http://placehold.it/150x150">
+                </div>
+                <div class="col-xs-9 col-md-8 service_heading">
+                    <h5 class="brand_heading">Ordering &amp; Payment</h5>
+                    <p class="hidden-xs service_description">Ordering couldn't be easier with many payment options available.</p>
+                </div>
+                <div class="col-xs-9 col-sm-12 nopadding service_description">
+                    <ul>
+                        <li>How to order online</li>
+                        <li>Payment Methods</li>
+                        <li><a href="$httpUrl('Page-Show','cid','gift-cards')$" title="Ann Summers Gift Cards">Gift Cards</a></li>
+                    </ul>
+                </div>
+                <div class="clearfix"></div>
+            </div>
+
+            <div class="clearfix visible-xs-block"></div>
+
+            <div class="col-xs-12 col-sm-6 col-md-4 padding-sm">
+                <div class="col-xs-3 col-md-4 nopadding service_image">
+                    <img src="http://placehold.it/150x150">
+                </div>
+                <div class="col-xs-9 col-md-8 service_heading">
+                    <h5 class="brand_heading">Delivery</h5>
+                    <p class="hidden-xs service_description">100% discreet, quick and hassle free direct to you or to a store.</p>
+                </div>
+                <div class="col-xs-9 col-sm-12 nopadding service_description">
+                    <ul>
+                        <li><a href="$httpUrl('Page-Show','cid','DeliveryReturns')$" title="Delivery &amp; Returns">Delivery Options &amp; Charges</a></li>
+                        <li>Missing Deliveries</li>
+                        <li>Discreet Delivery</li>
+                    </ul>
+                </div>
+                <div class="clearfix"></div>
+            </div>
+
+            <div class="clearfix visible-xs-block visible-sm-block"></div>
+
+            <div class="col-sm-6 col-md-4 padding-sm">
+                <div class="col-xs-3 col-md-4 nopadding service_image">
+                    <img src="http://placehold.it/150x150">
+                </div>
+                <div class="col-xs-9 col-md-8 service_heading">
+                    <h5 class="brand_heading">Returns &amp; Exchanges</h5>
+                    <p class="hidden-xs service_description">We appreciate that sometimes an item is not quite right.</p>
+                </div>
+                <div class="col-xs-9 col-sm-12 nopadding service_description">
+                    <ul>
+                        <li>Getting a refund</li>
+                        <li>How to return items</li>
+                        <li>Exchanging Items</li>
+                    </ul>
+                </div>
+                <div class="clearfix"></div>
+            </div>
+
+            <div class="clearfix visible-xs-block visible-md-block visible-lg-block"></div>
+
+            <div class="col-sm-6 col-md-4 padding-sm">
+                <div class="col-xs-3 col-md-4 nopadding service_image">
+                    <img src="http://placehold.it/150x150">
+                </div>
+                <div class="col-xs-9 col-md-8 service_heading">
+                    <h5 class="brand_heading">Promotions &amp; Offers</h5>
+                    <p class="hidden-xs service_description">Let's not just satisfy you with product, but price too.</p>
+                </div>
+                <div class="col-xs-9 col-sm-12 nopadding service_description">
+                    <ul>
+                        <li><a href="$httpUrl('Page-Show','cid','voucher-codes')$">Promotional Codes</a></li>
+                        <li><a href="$httpUrl('Page-Show','cid','TermsAndConditions')$" title="Terms &amp; Conditions">Terms &amp; Conditions</a></li>
+                        <li>Regular In-store Offers</li>
+                    </ul>
+                </div>
+                <div class="clearfix"></div>
+            </div>
+
+            <div class="clearfix visible-xs-block visible-sm-block"></div>
+
+            <div class="col-sm-6 col-md-4 padding-sm">
+                <div class="col-xs-3 col-md-4 nopadding service_image">
+                    <img src="http://placehold.it/150x150">
+                </div>
+                <div class="col-xs-9 col-md-8 service_heading">
+                    <h5 class="brand_heading">Sizing &amp; Care</h5>
+                    <p class="hidden-xs service_description">We want you to have the best fit and long lasting products.</p>
+                </div>
+                <div class="col-xs-9 col-sm-12 nopadding service_description">
+                    <ul>
+                        <li><a href="$httpUrl('Page-Show','cid','SizeGuides')$" title="Size Charts">Size Charts</a></li>
+                        <li>Washing Instructions</li>
+                        <li>Caring for your toys</li>
+                    </ul>
+                </div>
+                <div class="clearfix"></div>
+            </div>
+
+            <div class="clearfix visible-xs-block"></div>
+
+            <div class="col-sm-6 col-md-4 padding-sm">
+                <div class="col-xs-3 col-md-4 nopadding service_image">
+                    <img src="http://placehold.it/150x150">
+                </div>
+                <div class="col-xs-9 col-md-8 service_heading">
+                    <h5 class="brand_heading">The Detail</h5>
+                    <p class="hidden-xs service_description">Now for the important bits...</p>
+                </div>
+                <div class="col-xs-9 col-sm-12 nopadding service_description">
+                    <ul>
+                        <li><a href="$httpUrl('Page-Show','cid','Accessibility')$" title="Accessibility">Accessibility</a></li>
+                        <li><a href="$httpUrl('Page-Show','cid','privacy-policy')$" title="Privacy Policy">Privacy Policy</a></li>
+                        <li><a href="$httpUrl('Page-Show','cid','Cookies')$" title="Cookies">Cookie Policy</a><br></li>
+                        <li><a href="$httpUrl('Page-Show','cid','security-policy')$" title="Security">Security</a></li>
+                        <li><a href="$httpUrl('Page-Show','cid','TermsAndConditions')$" title="Terms &amp; Conditions">Terms &amp; Conditions</a></li>
+                    </ul>
+                </div>
+                <div class="clearfix"></div>
+            </div>
+        </div>
+    </div>
+    <div class="col-row">
+        <div class="col-xs-12">
+            <img src="http://placehold.it/620x620" class="hidden-xs">
+            <img src="http://placehold.it/1240x200" class="hidden-sm hidden-md hidden-lg">
+        </div>
+    </div>
+    <div class="col-row service_footer">
+        <div class="col-xs-12">
+            <h2 class="brand_heading">Contact Us</h2>
+            <h4 class="service_footer_info">Our Expert Customer Services Team are here to help, you can get in touch in the following ways...</h4>
+            <div class="col-xs-12 col-sm-4 nopadding">
+                <h4 class="brand_heading">By phone</h4>
+                <h5>Call 0333 440 6969</h5>
+                <p>Opening times:<br>Mon to Fri - 7am till 11pm<br>Weekends - 9.30am till 6pm</p>
+            </div>
+            <div class="col-xs-12 col-sm-4 nopadding">
+                <h4 class="brand_heading">By e-mail</h4>
+                <h5><a href="$httpsUrl('CustomerService-ContactUs')$" title="Contact Us" class="service_email">E-mail Us Here</a></h5>
+                You can use our online form to contact us by e-mail.
+            </div>
+            <div class="col-xs-12 col-sm-4 nopadding">
+                <h3 class="brand_heading">By post</h3>
+                <div class="col-sm-12 col-md-6">
+                    <h5>Parcels</h5>
+                    <p>All Returns Parcels should be sent to:</p>
+                    <p class="service_address">Preprocessing team<br>
+                    Gold Group House</p>
+                </div>
+                <div class="col-sm-12 col-md-6">
+                    <h5>Letters</h5>
+                    <p>All letters should be sent to:</p>
+                    <p class="service_address">PO Box<br>
+                    Ann Summers</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- PARTY PAGES
+<h1>Not referenced:</h1>
+<a href="$httpsUrl('stores')$" title="Find A Store">Find A Store</a><br>
+<a href="$httpUrl('Page-Show','cid','FAQs')$" title="FAQs">FAQs / Help</a><br>
+<a href="$httpUrl('Page-Show','cid','about-us')$" title="About Us">About Us</a><br>
+
+<a href="$httpUrl('Page-Show','cid','PartyPlanHome')$" title="Ann Summers Party">Ann Summers Parties</a><br>
+<a href="$httpUrl('Page-Show','cid','new-catalogue')$" title="Ann Summers Catalogue">Ann Summers Catalogue</a><br>
+-->
