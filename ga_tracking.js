@@ -270,9 +270,9 @@
                 'position': $('.quickview-btn').index(this) + 1
             });
             ga('liveTracker.ec:setAction', 'click', {
-                'list': listData.name
+                'list': listData.name.toUpperCase()
             });
-            ga('liveTracker.send', 'event', 'Product List', 'Result Quick Viewed', listData.name, {
+            ga('liveTracker.send', 'event', 'Product List', 'Result Quick Viewed', listData.name.toUpperCase(), {
                 'dimension1': resultCount,
                 'dimension2': '1 to ' + _uv.listing.items.length,
                 'dimension3': itm.sku_code
@@ -287,9 +287,9 @@
                 'position': $(elem).index(this) + 1
             });
             ga('liveTracker.ec:setAction', 'click', {
-                'list': listData.name
+                'list': listData.name.toUpperCase()
             });
-            ga('liveTracker.send', 'event', 'Product List', 'Result Clicked', listData.name, {
+            ga('liveTracker.send', 'event', 'Product List', 'Result Clicked', listData.name.toUpperCase(), {
                 'dimension1': resultCount,
                 'dimension2': '1 to ' + _uv.listing.items.length,
                 'dimension3': itm.sku_code
