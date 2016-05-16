@@ -340,11 +340,11 @@
         });
     }
     //Sign-up pop-up
-    if ( $.inArray('eml_fld', getUrlVars(window.location.href)) > -1 && _uv.page.breadcrumb[0].toLowerCase() == 'my acount') {
+    if ( $.inArray('eml_fld', getUrlVars(window.location.href)) > -1 && _uv.page.breadcrumb[0].toLowerCase() == 'my account') {
         ga('liveTracker.send', 'event', 'Login/Register', 'Pop-up Viewed', 'Newsletter Sign-up Pop-up Viewed');
     }
     //Registration sign-up
-    if ( $.inArray('registration', getUrlVars(window.location.href)) > -1 && _uv.page.breadcrumb[0].toLowerCase() == 'my acount') {
+    if ( $.inArray('registration', getUrlVars(window.location.href)) > -1 && _uv.page.breadcrumb[0].toLowerCase() == 'my account') {
         ga('liveTracker.send', 'event', 'Login/Register', 'Account Registered', 'New Account Created');
     }
     try {console.log('ga exec end:' + performance.now() / 1000 + ' secs')} catch (ignore) {}
