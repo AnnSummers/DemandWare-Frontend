@@ -208,7 +208,8 @@
     if (_uv.page.type.toLowerCase() === 'product') {
         ga('liveTracker.ec:addProduct', {
             'id': _uv.product.sku_code,
-            'name': _uv.product.name
+            'name': _uv.product.name,
+            'category': _uv.product.category
         });
         ga('liveTracker.ec:setAction', 'detail');
         ga('liveTracker.send', 'event', 'Product Page', 'View', _uv.product.name, {
@@ -227,7 +228,8 @@
                     'id': $.trim(item_id),
                     'name': item_name ? item_name : _uv.product.name,
                     'variant': item_size ? $.trim(item_size) : 'N/A',
-                    'unit_sale_price': item_price
+                    'unit_sale_price': item_price,
+                    'category': _uv.product.category
                 };
             } catch (ignore) {}
             basketChange('add', itm, qty);
