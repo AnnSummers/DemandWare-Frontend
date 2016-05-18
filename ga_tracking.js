@@ -20,7 +20,7 @@
         a = s.createElement(o), m = s.getElementsByTagName(o)[0];a.async = 1;
         a.src = g;m.parentNode.insertBefore(a, m);
     })(window, document, 'script', '//www.google-analytics.com/analytics.js', 'ga');
-    
+
     try {console.log('ga exec:' + performance.now() / 1000 + ' secs')} catch (ignore) {}
 
     // CREATE A TRACKER & NAME IT e.g. 'liveTracker'
@@ -29,6 +29,18 @@
     // ADD GA PLUGINS
     ga('liveTracker.require', 'ec');
     ga('liveTracker.require', 'displayfeatures');
+
+
+    // Internal Promotion on Homepage
+    if (_uv.page.type.toLowerCase() === 'home') {
+        var homePromos = $('.home-banner-carousel a:visible, .home-banner-left a:visible, .home-banner-right a:visible, .home-bottom-slot-seo a:visible');
+        homePromos.each(function(i){
+            var promoId = 'Homepage Promo' + (i + 1);
+            ga('ec:addPromo', {
+                'id': promoId,
+            });
+        });
+    }
 
     // SEND PAGEVIEW
     ga('liveTracker.send', 'pageview');
@@ -74,7 +86,6 @@
             }
         } catch (ignore) {}
     }
-
     /**
      * function listImpressions
      * @param {object} results - Contains a list of product objects with price, sku, product name etc
@@ -116,6 +127,14 @@
     }
 
     // PAGE EVENTS
+    if (_uv.page.type.toLowerCase() === 'home') {
+        homePromos.each(function(i){
+            var promoId = 'Homepage Promo' + (i + 1);
+            ga('ec:setAction', 'promo_click');
+            ga('send', 'event', 'Internal Promotion', 'click', promoId);
+        });
+    }
+
     if (_uv.page.type.toLowerCase() === 'basket') {
         for (var i = 0; i < _uv.basket.line_items.length; i++) {
             basketChange(false, 'add', _uv.basket.line_items[i], _uv.basket.line_items[i].quantity);
