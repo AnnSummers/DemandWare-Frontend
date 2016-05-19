@@ -36,7 +36,7 @@
         var homePromos = $('.home-banner-carousel a:visible, .home-banner-left a:visible, .home-banner-right a:visible, .home-bottom-slot-seo a:visible');
         homePromos.each(function(i){
             var promoId = 'Homepage Promo' + (i + 1);
-            ga('ec:addPromo', {
+            ga('liveTracker.ec:addPromo', {
                 'id': promoId,
             });
         });
@@ -130,8 +130,8 @@
     if (_uv.page.type.toLowerCase() === 'home') {
         homePromos.each(function(i){
             var promoId = 'Homepage Promo' + (i + 1);
-            ga('ec:setAction', 'promo_click');
-            ga('send', 'event', 'Internal Promotion', 'click', promoId);
+            ga('liveTracker.ec:setAction', 'promo_click');
+            ga('liveTracker.send', 'event', 'Internal Promotion', 'click', promoId);
         });
     }
 
