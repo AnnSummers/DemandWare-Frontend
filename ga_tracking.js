@@ -1,6 +1,8 @@
 function () {
   'use strict';
 
+  console.log('GA Version v1.5.3');
+
   // INCLUDE GA SCRIPT
   (function(i, s, o, g, r, a, m) {
     i.GoogleAnalyticsObject = r;
@@ -58,85 +60,13 @@ function () {
   // SEND PAGEVIEW
   ga('testTracker.send', 'pageview');
 
-  /**
-   * function basketChange - Handles adding and removing products in the GA tracker object
-   * @param {string} operation - add or remove depending on user iteraction
-   * @param {object} item - contains information about the product being adding/removed
-   * @param {integer} quantity - number of line items being added/removed
-   */
-  function basketChange(operation, item, quantity) {
-    try {
-      var item_price = '' + item.product.unit_sale_price.replace(/[^0-9\.]+/g, '');
-      if (!isNaN(parseFloat(item_price))) {
-        ga('testTracker.ec:addProduct', {
-          'id': item.product.sku_code,
-          'name': item.product.name,
-          'variant': item.product.size || '',
-          'price': item_price,
-          'quantity': quantity,
-          'category': item.product.category
-        });
-        if (operation) {
-          if (operation == 'remove') {
-            ga('testTracker.ec:setAction', 'remove');
-            ga('testTracker.send', 'event', 'Remove From Bag', 'Click', quantity + ' x ' + item.product.name);
-          } else {
-            ga('testTracker.ec:setAction', 'add');
-            ga('testTracker.send', 'event', 'Add To Bag', 'Click', quantity + ' x ' + item.product.name);
-          }
-        }
-      }
-    } catch (ignore) {}
-  }
-  /**
-   * function listImpressions
-   * @param {object} results - Contains a list of product objects with price, sku, product name etc
-   */
-  var currentMarker = 0;
-  function listImpressions(results) {
-    var listData = {
-      'name': '',
-      'sort': 'Default Sort',
-      'results': results || ''
-    };
-    try {
-      if (_uv.page.type.toLowerCase() === 'search') {
-        listData.name = 'S: ' + _uv.page.breadcrumb[0];
-      } else if (_uv.page.type === 'category') {
-        listData.name = 'C: ' + _uv.page.breadcrumb[_uv.page.breadcrumb.length - 1];
-      }
-    } catch (ignore) {}
-    try {
-      listData.sort = $('.sort-by .selector span').first().text();
-      listData.sort = (listData.sort.indexOf('Sort by') > -1) ? 'Default Sort' : listData.sort;
-    } catch (ignore) {}
-    for (var i = currentMarker; i < _uv.listing.items.length; i++) {
-      try {
-        ga('testTracker.ec:addImpression', {
-          'id': _uv.listing.items[i].sku_code,
-          'name': _uv.listing.items[i].name,
-          'list': listData.name.toUpperCase(),
-          'position': i++
-        });
-        currentMarker++
-      } catch (ignore) {}
-    }
-    ga('testTracker.send', 'event', 'Product List', 'Results Returned', listData.name.toUpperCase(), {
-      'nonInteraction': true,
-      'dimension1': listData.results,
-      'dimension2': (currentMarker + 1) + ' to ' + _uv.listing.items.length,
-      'dimension4': listData.sort
-    });
-    return listData;
-  }
-
   // PAGE EVENTS
   if (_uv.page.type.toLowerCase() === 'basket') {
     if ($('.error-message').length) {
       try {
         var error_str = $('.error-message').text();
         if (error_str.length) {
-          ga('testTracker.send', 'event', 'Basket', 'Error', error_str);
+          sendEvent(['Basket', 'Error', error_str, {'nonInteraction': 1}]);
         }
       } catch (ignore) {}
     }
@@ -148,9 +78,7 @@ function () {
       'step': 1,
       'option': _uv.basket.shipping_method
     });
-    ga('testTracker.send', 'event', 'Basket Page', 'Basket Viewed', {
-      'nonInteraction': true
-    });
+    sendEvent(['Basket Page', 'Basket Viewed', {'nonInteraction': 1}]);
     $('.remove').bind('click.basket_remove', function() {
       basketChange('remove', _uv.basket.line_items[$(this).index()], _uv.basket.line_items[$(this).index()].quantity);
     });
@@ -166,7 +94,7 @@ function () {
       }
     });
     $('[name="dwfrm_cart_checkoutCart"]').one('click.ga_checkout', function() {
-      ga('testTracker.send', 'event', 'Basket Page', 'Checkout', 'Card Payment');
+      sendEvent(['Basket Page', 'Checkout', 'Card Payment']);
     });
     $('[name="dwfrm_cart_expressCheckout"]').one('click.ga_checkout', function() {
       ga('testTracker.ec:setAction', 'checkout', {
@@ -176,16 +104,15 @@ function () {
         'step': 3,
         'option': 'Paypal Express'
       });
-      ga('testTracker.send', 'event', 'Basket Page', 'Checkout', 'Paypal Payment');
+      sendEvent(['Basket Page', 'Checkout', 'Paypal Payment']);
     });
   }
+
   if (_uv.page.type.toLowerCase() === 'checkout' && _uv.page.breadcrumb == 'checkoutprogressindicator.billing') {
     ga('testTracker.ec:setAction', 'checkout', {
       'step': 2
     });
-    ga('testTracker.send', 'event', 'Your Details Page', 'Details Viewed', {
-      'nonInteraction': true
-    });
+    sendEvent(['Your Details Page', 'Details Viewed', {'nonInteraction': 1}]);
     var step3 = function(type) {
       for (var i = 0; i < _uv.basket.line_items.length; i++) {
         ga('testTracker.ec:addProduct', {
@@ -200,35 +127,34 @@ function () {
         'step': 3,
         'option': type
       });
-      ga('testTracker.send', 'event', 'Payment Page', 'Payment Options Viewed', {
-        'nonInteraction': true
-      });
+      sendEvent(['Payment Page', 'Payment Options Viewed', {'nonInteraction': 1}]);
     };
     $('[name="dwfrm_billing_paymentMethods_selectedPaymentMethodID"]').on('click', function() {
       step3($(this).val());
     });
   }
+
   if (_uv.page.type.toLowerCase() === 'confirmation') {
-    for (var j = 0; j < _uv.transaction.line_items.length; j++) {
+    var trns = _uv.transaction;
+    for (var j = 0; j < trns.line_items.length; j++) {
       ga('testTracker.ec:addProduct', {
-        'id': _uv.transaction.line_items[j].product.sku_code,
-        'name': _uv.transaction.line_items[j].product.name,
-        'price': _uv.transaction.line_items[j].product.unit_sale_price,
-        'quantity': _uv.transaction.line_items[j].quantity,
-        'category': _uv.transaction.line_items[j].product.category
+        'id': trns.line_items[j].product.sku_code,
+        'name': trns.line_items[j].product.name,
+        'price': trns.line_items[j].product.unit_sale_price,
+        'quantity': trns.line_items[j].quantity,
+        'category': trns.line_items[j].product.category
       });
     }
     ga('testTracker.ec:setAction', 'purchase', {
-      'id': _uv.transaction.order_id,
-      'affiliation': 'Ann Summers - Online - ' + _uv.transaction.payment_type,
-      'revenue': _uv.transaction.total,
-      'tax': _uv.transaction.tax,
-      'shipping': _uv.transaction.shipping_cost
+      'id': trns.order_id,
+      'affiliation': 'Ann Summers - Online - ' + trns.payment_type,
+      'revenue': trns.total,
+      'tax': trns.tax,
+      'shipping': trns.shipping_cost
     });
-    ga('testTracker.send', 'event', 'Confirmation Page', 'Order Made', {
-      'nonInteraction': true
-    });
+    sendEvent(['Confirmation Page', 'Order Made', {'nonInteraction': 1}]);
   }
+
   if (_uv.page.type.toLowerCase() === 'product') {
     ga('testTracker.ec:addProduct', {
       'id': _uv.product.sku_code,
@@ -236,9 +162,7 @@ function () {
       'category': _uv.product.category
     });
     ga('testTracker.ec:setAction', 'detail');
-    ga('testTracker.send', 'event', 'Product Page', 'View', _uv.product.name, {
-      'nonInteraction': true
-    });
+    sendEvent(['Product Page', 'View', _uv.product.name, {'nonInteraction': 1}]);
     $body.on('click.basket_add', '.add-to-cart', function() {
       if ($(this).prop('disabled')) return;
       var r = $(this).closest('.product-content'),
@@ -285,11 +209,12 @@ function () {
     });
   }
   if (_uv.page.type.toLowerCase() === 'category' && !$('.categorylanding').length || _uv.page.type.toLowerCase() === 'search') {
-    var resultCount = $.trim($('.switch .count:eq(0)').text().replace(' Results', '')),
-      listData = listImpressions(resultCount);
+    var resultCount = $.trim($('.switch .count:eq(0)').text().replace(' Results', ''));
+    list = getListData();
+    listImpressions(list);
     $(document).ajaxComplete(function(e, x, o) {
       if (getUrlVars(o.url).sz && getUrlVars(o.url).format == 'page-element') {
-        listImpressions(resultCount);
+        listImpressions(list);
       }
     });
     $body.on('click.quickview', '.quickview-btn', function() {
@@ -300,13 +225,9 @@ function () {
         'position': $('.quickview-btn').index(this) + 1
       });
       ga('testTracker.ec:setAction', 'click', {
-        'list': listData.name.toUpperCase()
+        'list': list.name.toUpperCase()
       });
-      ga('testTracker.send', 'event', 'Product List', 'Result Quick Viewed', listData.name.toUpperCase(), {
-        'dimension1': resultCount,
-        'dimension2': '1 to ' + _uv.listing.items.length,
-        'dimension3': itm.sku_code
-      });
+      sendEvent(['Product List', 'Result Quick Viewed', list.name.toUpperCase()]);
     });
     $body.on('click.productview', '.name-link, .thumb-link', function() {
       var elem = $(this).hasClass('thumb-link') ? '.thumb-link' : '.name-link';
@@ -317,13 +238,9 @@ function () {
         'position': $(elem).index(this) + 1
       });
       ga('testTracker.ec:setAction', 'click', {
-        'list': listData.name.toUpperCase()
+        'list': list.name.toUpperCase()
       });
-      ga('testTracker.send', 'event', 'Product List', 'Result Clicked', listData.name.toUpperCase(), {
-        'dimension1': resultCount,
-        'dimension2': '1 to ' + _uv.listing.items.length,
-        'dimension3': itm.sku_code
-      });
+      sendEvent(['Product List', 'Result Clicked', list.name.toUpperCase()]);
     });
     $body.on('click.basket_add', '#add-to-cart', function() {
       if ($(this).prop('disabled')) return;
@@ -375,13 +292,95 @@ function () {
   }
   //Sign-up pop-up
   if ($.inArray('eml_fld', getUrlVars(window.location.href)) > -1 && _uv.page.breadcrumb[0].toLowerCase() == 'my account') {
-    ga('testTracker.send', 'event', 'Login/Register', 'Pop-up Viewed', 'Newsletter Sign-up Pop-up Viewed');
+    sendEvent(['Login/Register', 'Pop-up Viewed', 'Newsletter Sign-up Pop-up Viewed']);
   }
   //Registration sign-up
   if ($.inArray('registration', getUrlVars(window.location.href)) > -1 && _uv.page.breadcrumb[0].toLowerCase() == 'my account') {
-    ga('testTracker.send', 'event', 'Login/Register', 'Account Registered', 'New Account Created');
+    sendEvent(['Login/Register', 'Account Registered', 'New Account Created']);
   }
   // UTILITIES
+
+
+  /**
+   * function basketChange - Handles adding and removing products in the GA tracker object
+   * @param {string} operation - add or remove depending on user iteraction
+   * @param {object} item - contains information about the product being adding/removed
+   * @param {integer} quantity - number of line items being added/removed
+   */
+  function basketChange(operation, item, quantity) {
+    try {
+      var item_price = '' + item.product.unit_sale_price.replace(/[^0-9\.]+/g, '');
+      if (!isNaN(parseFloat(item_price))) {
+        ga('testTracker.ec:addProduct', {
+          'id': item.product.sku_code,
+          'name': item.product.name,
+          'variant': item.product.size || '',
+          'price': item_price,
+          'quantity': quantity,
+          'category': item.product.category
+        });
+        if (operation) {
+          if (operation == 'remove') {
+            ga('testTracker.ec:setAction', 'remove');
+            sendEvent(['Remove From Bag', 'Click', quantity + ' x ' + item.product.name]);
+          } else {
+            ga('testTracker.ec:setAction', 'add');
+            sendEvent(['Add To Bag', 'Click', quantity + ' x ' + item.product.name]);
+          }
+        }
+      }
+    } catch (ignore) {}
+  }
+  /**
+   * function getListData
+   */
+  function getListData() {
+    var listData = {
+      'name': '',
+      'sort': 'Default Sort'
+    };
+    if (_uv.page.type.toLowerCase() === 'search') {
+      listData.name = 'S: ' + _uv.page.breadcrumb[0];
+    } else if (_uv.page.type === 'category') {
+      listData.name = 'C: ' + _uv.page.breadcrumb[_uv.page.breadcrumb.length - 1];
+    }
+
+    try {
+      listData.sort = $('.sort-by .selector span').first().text();
+      listData.sort = (listData.sort.indexOf('Sort by') > -1) ? 'Default Sort' : listData.sort;
+    } catch (ignore) {}
+
+    return listData;
+  }
+
+  /**
+   * function listImpressions
+   */
+  function listImpressions(list) {
+
+    var arr = _uv.listing.items,
+        items = 12;
+
+    if (arr.length % items > 0) {
+      var remainder = -Math.abs(arr.length % items);
+      arr = arr.slice(remainder);
+    } else if (arr.length > 12) {
+      arr = arr.splice(12);
+    }
+
+    for (var i = 0; i < arr.length; i++) {
+      try {
+        ga('testTracker.ec:addImpression', {
+          'id': arr[i].sku_code,
+          'name': arr[i].name,
+          'list': list.name.toUpperCase(),
+          'position': i + 1
+        });
+      } catch (ignore) {}
+    }
+    sendEvent(['Product List','Results Returned',list.name.toUpperCase(),{'nonInteraction': 1}]);
+  }
+
   /**
    * function getUrlVar - Returns params from a given URL
    * @param {string} url - A URL passed in to return the parameter on the end e.g. ?utm_campaign etc.
@@ -402,14 +401,26 @@ function () {
    * function sendEventToGA - Returns params from a given URL
    * @param {object} event - event data sent to GA
    * Example:
-   * sendEventToGA({'category':'Video','action':'Play','label':'Summer Campaign Trailer'})
+   * sendEventToGA({'category':'Video','action':'Play','label':'Summer Campaign Trailer', options:{'nonInteraction': 1}})
    */
-  function sendEventToGA(event) {
-    if (event && event.category && event.action && event.label) {
-      ga('testTracker.send', 'event', '' + event.category, '' + event.action, '' + event.label)
+  function sendEvent(event) {
+    if (event instanceof Array) {
+      if (event.length == 4) {
+        ga('testTracker.send', 'event', '' + event[0], '' + event[1], '' + event[2], event[3])
+      } else {
+        ga('testTracker.send', 'event', '' + event[0], '' + event[1], '' + event[2])
+      }
     } else {
-      console.log('Event argument object must contain: category, action and label e.g. sendEventToGA({\'category\':\'Video\',\'action\':\'Play\',\'label\':\'Summer Campaign Trailer\'})')
+      if (event && event.category && event.action && event.label) {
+        if(event.options) {
+          ga('testTracker.send', 'event', '' + event.category, '' + event.action, '' + event.label, event.options)
+        } else {
+          ga('testTracker.send', 'event', '' + event.category, '' + event.action, '' + event.label)
+        }
+      } else {
+        console.log('Event argument object must contain: category, action and label e.g. sendEventToGA({\'category\':\'Video\',\'action\':\'Play\',\'label\':\'Summer Campaign Trailer\'})')
+      }
     }
   }
-  window.sendEventToGA = sendEventToGA;
+  window.sendEventToGA = sendEvent;
 }
