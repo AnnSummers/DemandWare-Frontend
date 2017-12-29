@@ -1,7 +1,7 @@
 function () {
   'use strict';
 
-  console.log('GA Version v1.5.3');
+  console.log('GA Version v1.5.6');
 
   // INCLUDE GA SCRIPT
   (function(i, s, o, g, r, a, m) {
@@ -18,17 +18,24 @@ function () {
    * STAGING (Staging only data): UA-64827939-1
    */
   var _uv = universal_variable,
-      isHelpPage = this.valueForToken("isHelpPage"),
+      $body = $('body'),
       pageGroup = 'Content/Other',
-      ga_account = this.valueForToken("ga_account"),
-      $body = $('body');
+      isHelpPage = this.valueForToken('isHelpPage'),
+      ga_tracker = this.valueForToken('ga_tracker'),
+      ga_account = this.valueForToken('ga_account'),
+      set = ga_tracker + '.set',
+      send = ga_tracker + '.send',
+      require = ga_tracker + '.require',
+      ecSetAction = ga_tracker + '.ec:setAction',
+      ecAddProduct = ga_tracker + '.ec:addProduct',
+      ecAddImpression = ga_tracker + '.ec:addImpression';
 
   // CREATE A TRACKER & NAME IT e.g. 'testTracker'
-  ga('create', ga_account, 'auto', 'testTracker');
+  ga('create', ga_account, 'auto', ga_tracker);
 
   // ADD GA PLUGINS
-  ga('testTracker.require', 'ec');
-  ga('testTracker.require', 'displayfeatures');
+  ga(require, 'ec');
+  ga(require, 'displayfeatures');
 
   switch (_uv.page.type) {
     case 'home':
@@ -36,9 +43,13 @@ function () {
       break;
     case 'search':
       pageGroup = 'Search';
+      ga(set, 'dimension3', getPLPSort());
       break;
     case 'category':
       pageGroup = 'PLP';
+      if(!$('.categorylanding').length) {
+        ga(set, 'dimension3', getPLPSort());
+      }
       break;
     case 'product':
       pageGroup = 'PDP';
@@ -55,10 +66,11 @@ function () {
         pageGroup = 'Help Pages'
       }
   }
-  ga('testTracker.set', 'contentGroup1', pageGroup);
+
+  ga(set, 'contentGroup1', pageGroup);
 
   // SEND PAGEVIEW
-  ga('testTracker.send', 'pageview');
+  ga(send, 'pageview');
 
   // PAGE EVENTS
   if (_uv.page.type.toLowerCase() === 'basket') {
@@ -74,7 +86,7 @@ function () {
     for (var i = 0; i < _uv.basket.line_items.length; i++) {
       basketChange(false, 'add', _uv.basket.line_items[i], _uv.basket.line_items[i].quantity);
     }
-    ga('testTracker.ec:setAction', 'checkout', {
+    ga(ecSetAction, 'checkout', {
       'step': 1,
       'option': _uv.basket.shipping_method
     });
@@ -97,10 +109,10 @@ function () {
       sendEvent(['Basket Page', 'Checkout', 'Card Payment']);
     });
     $('[name="dwfrm_cart_expressCheckout"]').one('click.ga_checkout', function() {
-      ga('testTracker.ec:setAction', 'checkout', {
+      ga(ecSetAction, 'checkout', {
         'step': 2
       });
-      ga('testTracker.ec:setAction', 'checkout', {
+      ga(ecSetAction, 'checkout', {
         'step': 3,
         'option': 'Paypal Express'
       });
@@ -109,13 +121,13 @@ function () {
   }
 
   if (_uv.page.type.toLowerCase() === 'checkout' && _uv.page.breadcrumb == 'checkoutprogressindicator.billing') {
-    ga('testTracker.ec:setAction', 'checkout', {
+    ga(ecSetAction, 'checkout', {
       'step': 2
     });
     sendEvent(['Your Details Page', 'Details Viewed', {'nonInteraction': 1}]);
     var step3 = function(type) {
       for (var i = 0; i < _uv.basket.line_items.length; i++) {
-        ga('testTracker.ec:addProduct', {
+        ga(ecAddProduct, {
           'id': _uv.basket.line_items[i].product.sku_code,
           'name': _uv.basket.line_items[i].product.name,
           'price': _uv.basket.line_items[i].product.unit_sale_price,
@@ -123,7 +135,7 @@ function () {
           'category': _uv.basket.line_items[i].product.category
         });
       }
-      ga('testTracker.ec:setAction', 'checkout', {
+      ga(ecSetAction, 'checkout', {
         'step': 3,
         'option': type
       });
@@ -137,7 +149,7 @@ function () {
   if (_uv.page.type.toLowerCase() === 'confirmation') {
     var trns = _uv.transaction;
     for (var j = 0; j < trns.line_items.length; j++) {
-      ga('testTracker.ec:addProduct', {
+      ga(ecAddProduct, {
         'id': trns.line_items[j].product.sku_code,
         'name': trns.line_items[j].product.name,
         'price': trns.line_items[j].product.unit_sale_price,
@@ -145,7 +157,7 @@ function () {
         'category': trns.line_items[j].product.category
       });
     }
-    ga('testTracker.ec:setAction', 'purchase', {
+    ga(ecSetAction, 'purchase', {
       'id': trns.order_id,
       'affiliation': 'Ann Summers - Online - ' + trns.payment_type,
       'revenue': trns.total,
@@ -156,12 +168,12 @@ function () {
   }
 
   if (_uv.page.type.toLowerCase() === 'product') {
-    ga('testTracker.ec:addProduct', {
+    ga(ecAddProduct, {
       'id': _uv.product.sku_code,
       'name': _uv.product.name,
       'category': _uv.product.category
     });
-    ga('testTracker.ec:setAction', 'detail');
+    ga(ecSetAction, 'detail');
     sendEvent(['Product Page', 'View', _uv.product.name, {'nonInteraction': 1}]);
     $body.on('click.basket_add', '.add-to-cart', function() {
       if ($(this).prop('disabled')) return;
@@ -214,33 +226,37 @@ function () {
     listImpressions(list);
     $(document).ajaxComplete(function(e, x, o) {
       if (getUrlVars(o.url).sz && getUrlVars(o.url).format == 'page-element') {
-        listImpressions(list);
+        var startPoint = getUrlVars(o.url).start;
+        listImpressions(list, startPoint);
+      } else if (getUrlVars(o.url).indexOf('srule') > -1) {
+        getPLPSort(true)
       }
     });
+
     $body.on('click.quickview', '.quickview-btn', function() {
       var itm = _uv.listing.items[$('.quickview-btn').index(this)];
-      ga('testTracker.ec:addProduct', {
+      ga(ecAddProduct, {
         'id': itm.sku_code,
         'name': itm.name,
         'position': $('.quickview-btn').index(this) + 1
       });
-      ga('testTracker.ec:setAction', 'click', {
-        'list': list.name.toUpperCase()
+      ga(ecSetAction, 'click', {
+        'list': list.name
       });
-      sendEvent(['Product List', 'Result Quick Viewed', list.name.toUpperCase()]);
+      sendEvent(['Product List', 'Result Quick Viewed', list.name]);
     });
     $body.on('click.productview', '.name-link, .thumb-link', function() {
       var elem = $(this).hasClass('thumb-link') ? '.thumb-link' : '.name-link';
       var itm = _uv.listing.items[$(elem).index(this)];
-      ga('testTracker.ec:addProduct', {
+      ga(ecAddProduct, {
         'id': itm.sku_code,
         'name': itm.name,
         'position': $(elem).index(this) + 1
       });
-      ga('testTracker.ec:setAction', 'click', {
-        'list': list.name.toUpperCase()
+      ga(ecSetAction, 'click', {
+        'list': list.name
       });
-      sendEvent(['Product List', 'Result Clicked', list.name.toUpperCase()]);
+      sendEvent(['Product List', 'Result Clicked', list.name]);
     });
     $body.on('click.basket_add', '#add-to-cart', function() {
       if ($(this).prop('disabled')) return;
@@ -290,6 +306,9 @@ function () {
       });
     });
   }
+
+  //EVENTS, CUSTOM METRICS & CUSTOM DIMENSIONS
+
   //Sign-up pop-up
   if ($.inArray('eml_fld', getUrlVars(window.location.href)) > -1 && _uv.page.breadcrumb[0].toLowerCase() == 'my account') {
     sendEvent(['Login/Register', 'Pop-up Viewed', 'Newsletter Sign-up Pop-up Viewed']);
@@ -298,8 +317,9 @@ function () {
   if ($.inArray('registration', getUrlVars(window.location.href)) > -1 && _uv.page.breadcrumb[0].toLowerCase() == 'my account') {
     sendEvent(['Login/Register', 'Account Registered', 'New Account Created']);
   }
-  // UTILITIES
 
+
+  // UTILITIES
 
   /**
    * function basketChange - Handles adding and removing products in the GA tracker object
@@ -311,7 +331,7 @@ function () {
     try {
       var item_price = '' + item.product.unit_sale_price.replace(/[^0-9\.]+/g, '');
       if (!isNaN(parseFloat(item_price))) {
-        ga('testTracker.ec:addProduct', {
+        ga(ecAddProduct, {
           'id': item.product.sku_code,
           'name': item.product.name,
           'variant': item.product.size || '',
@@ -321,10 +341,10 @@ function () {
         });
         if (operation) {
           if (operation == 'remove') {
-            ga('testTracker.ec:setAction', 'remove');
+            ga(ecSetAction, 'remove');
             sendEvent(['Remove From Bag', 'Click', quantity + ' x ' + item.product.name]);
           } else {
-            ga('testTracker.ec:setAction', 'add');
+            ga(ecSetAction, 'add');
             sendEvent(['Add To Bag', 'Click', quantity + ' x ' + item.product.name]);
           }
         }
@@ -336,30 +356,49 @@ function () {
    */
   function getListData() {
     var listData = {
-      'name': '',
-      'sort': 'Default Sort'
+      'name': ''
     };
     if (_uv.page.type.toLowerCase() === 'search') {
       listData.name = 'S: ' + _uv.page.breadcrumb[0];
     } else if (_uv.page.type === 'category') {
       listData.name = 'C: ' + _uv.page.breadcrumb[_uv.page.breadcrumb.length - 1];
     }
-
-    try {
-      listData.sort = $('.sort-by .selector span').first().text();
-      listData.sort = (listData.sort.indexOf('Sort by') > -1) ? 'Default Sort' : listData.sort;
-    } catch (ignore) {}
-
+    listData.name = listData.name.toUpperCase();
     return listData;
+  }
+
+  /**
+   * function getPLPSort
+   */
+  function getPLPSort(fireEvent) {
+    try {
+
+      var sort ='default-sort';
+
+      if (window.location.hash.indexOf('srule=') > -1) {
+        var hsh = window.location.hash.substring(1);
+        sort = hsh.split('srule=')[1].split('&')[0];
+      }
+
+      sort = sort.replace('%20','-');
+      sort = sort.replace(' ','-');
+      sort = sort.toLowerCase();
+
+      if (fireEvent) {
+        sendEvent(['Product List','Sort Change',sort,{'dimension3': sort}]);
+      }
+    } catch (ignore) {}
+    return sort;
   }
 
   /**
    * function listImpressions
    */
-  function listImpressions(list) {
+  function listImpressions(list, startPoint) {
 
     var arr = _uv.listing.items,
         items = 12;
+        start = startPoint ? Number(startPoint) : 0;
 
     if (arr.length % items > 0) {
       var remainder = -Math.abs(arr.length % items);
@@ -370,15 +409,17 @@ function () {
 
     for (var i = 0; i < arr.length; i++) {
       try {
-        ga('testTracker.ec:addImpression', {
+        ga(ecAddImpression, {
           'id': arr[i].sku_code,
           'name': arr[i].name,
-          'list': list.name.toUpperCase(),
-          'position': i + 1
+          'list': list.name,
+          'position': start + i + 1
         });
+        if(i == arr.length - 1) {
+          sendEvent(['Product List','Results Returned',list.name,{'nonInteraction': 1}]);
+        }
       } catch (ignore) {}
     }
-    sendEvent(['Product List','Results Returned',list.name.toUpperCase(),{'nonInteraction': 1}]);
   }
 
   /**
@@ -406,16 +447,16 @@ function () {
   function sendEvent(event) {
     if (event instanceof Array) {
       if (event.length == 4) {
-        ga('testTracker.send', 'event', '' + event[0], '' + event[1], '' + event[2], event[3])
+        ga(send, 'event', '' + event[0], '' + event[1], '' + event[2], event[3])
       } else {
-        ga('testTracker.send', 'event', '' + event[0], '' + event[1], '' + event[2])
+        ga(send, 'event', '' + event[0], '' + event[1], '' + event[2])
       }
     } else {
       if (event && event.category && event.action && event.label) {
         if(event.options) {
-          ga('testTracker.send', 'event', '' + event.category, '' + event.action, '' + event.label, event.options)
+          ga(send, 'event', '' + event.category, '' + event.action, '' + event.label, event.options)
         } else {
-          ga('testTracker.send', 'event', '' + event.category, '' + event.action, '' + event.label)
+          ga(send, 'event', '' + event.category, '' + event.action, '' + event.label)
         }
       } else {
         console.log('Event argument object must contain: category, action and label e.g. sendEventToGA({\'category\':\'Video\',\'action\':\'Play\',\'label\':\'Summer Campaign Trailer\'})')
