@@ -1,7 +1,7 @@
 function () {
   'use strict';
 
-  console.log('GA Version v1.6.0');
+  console.log('GA Version v1.6.1');
 
   // INCLUDE GA SCRIPT
   (function(i, s, o, g, r, a, m) {
@@ -36,6 +36,7 @@ function () {
 
   // ADD GA PLUGINS
   ga(require, 'ec');
+  ga(require, 'linkid');
   ga(require, 'displayfeatures');
 
   switch (uv.page.type) {
@@ -58,10 +59,10 @@ function () {
       pageGroup = 'PDP';
       break;
     case 'basket':
-      pageGroup = (thisUrl.indexOf('WorldPay-Cancel') > -1) ? 'Order Cancellation' : 'Checkout';
+      pageGroup = (thisUrl.indexOf('WorldPay-Cancel') > -1) ? 'Order Cancellation' : 'Basket';
       break;
     case 'checkout':
-      pageGroup = 'Checkout';
+       pageGroup = (thisUrl.indexOf('WorldPay-Cancel') > -1) ? 'Order Cancellation' : 'Checkout';
       break;
     case 'confirmation':
       pageGroup = 'Order Confirmation';
@@ -69,6 +70,9 @@ function () {
     default:
       if ( isHelpPage ) {
         pageGroup = 'Help Pages'
+      }
+      if (thisUrl.indexOf('blog') > -1) {
+        pageGroup = 'Blog'
       }
   }
 
