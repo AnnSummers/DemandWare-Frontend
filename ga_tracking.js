@@ -1,15 +1,7 @@
 function () {
   'use strict';
 
-  console.log('GA Version v1.6.1');
-
-  // INCLUDE GA SCRIPT
-  (function(i, s, o, g, r, a, m) {
-    i.GoogleAnalyticsObject = r;
-    i[r] = i[r] || function() {(i[r].q = i[r].q || []).push(arguments);}, i[r].l = 1 * new Date();
-    a = s.createElement(o), m = s.getElementsByTagName(o)[0];a.async = 1;
-    a.src = g;m.parentNode.insertBefore(a, m);
-  })(window, document, 'script', '//www.google-analytics.com/analytics.js', 'ga');
+  console.log('GA Version v1.7.2');
 
   /**
    * GA Account IDs:-
@@ -17,56 +9,108 @@ function () {
    * PRE-DEPLOYMENT (Real transaction data): UA-55800919-1
    * STAGING (Staging only data): UA-64827939-1
    */
+   (function(i, s, o, g, r, a, m) {
+    i.GoogleAnalyticsObject = r;
+    i[r] = i[r] || function() {(i[r].q = i[r].q || []).push(arguments);}, i[r].l = 1 * new Date();
+    a = s.createElement(o), m = s.getElementsByTagName(o)[0];a.async = 1;
+    a.src = g;m.parentNode.insertBefore(a, m);
+  })(window, document, 'script', '//www.google-analytics.com/analytics.js', 'ga');
+
   var uv = universal_variable,
+      pgType = uv.page.type.toLowerCase(),
       $body = $('body'),
       pageGroup = 'Content/Other',
       thisUrl = window.location.href;
       isHelpPage = this.valueForToken('isHelpPage'),
       ga_tracker = this.valueForToken('ga_tracker'),
       ga_account = this.valueForToken('ga_account'),
-      set = ga_tracker + '.set',
-      send = ga_tracker + '.send',
-      require = ga_tracker + '.require',
-      ecSetAction = ga_tracker + '.ec:setAction',
-      ecAddProduct = ga_tracker + '.ec:addProduct',
-      ecAddImpression = ga_tracker + '.ec:addImpression',
+      ga_set = ga_tracker + '.set',
+      ga_send = ga_tracker + '.send',
+      ga_req = ga_tracker + '.require',
+      ga_ecSetAction = ga_tracker + '.ec:setAction',
+      ga_ecAddProduct = ga_tracker + '.ec:addProduct',
+      ga_ecAddImpression = ga_tracker + '.ec:addImpression';
 
   // CREATE A TRACKER & NAME IT e.g. 'testTracker'
   ga('create', ga_account, 'auto', ga_tracker);
 
   // ADD GA PLUGINS
-  ga(require, 'ec');
-  ga(require, 'linkid');
-  ga(require, 'displayfeatures');
+  ga(ga_req, 'ec');
+  ga(ga_req, 'linkid');
+  ga(ga_req, 'displayfeatures');
 
-  switch (uv.page.type) {
+
+  // PAGE SPECIFIC EXECUTION
+  switch (pgType) {
+
+    /* HOMEPAGE */
     case 'home':
       pageGroup = 'Homepage';
+      ga(ga_set, 'contentGroup1', pageGroup);
+      ga(ga_send, 'pageview');
       break;
+
+    /* SEARCH */
     case 'search':
       pageGroup = 'Search';
-      ga(set, 'dimension3', getPLPSort());
+      ga(ga_set, 'dimension3', getPLPSort());
+      ga(ga_set, 'contentGroup1', pageGroup);
+      ga(ga_send, 'pageview');
+      page_plpsearch();
       break;
+
+    /* CATEGORY */
     case 'category':
       if(thisUrl.indexOf('deliveryreturns') == -1 && thisUrl.indexOf('help-advice') == -1) {
         pageGroup = 'PLP';
         if(!$('.categorylanding').length) {
-          ga(set, 'dimension3', getPLPSort());
+          ga(ga_set, 'dimension3', getPLPSort());
         }
+        ga(ga_set, 'contentGroup2', uv.page.breadcrumb[0]);
+      }
+      ga(ga_set, 'contentGroup1', pageGroup);
+      ga(ga_send, 'pageview');
+      if (!$('.categorylanding').length) {
+        page_plpsearch();
       }
       break;
+
+    /* PRODUCT */
     case 'product':
       pageGroup = 'PDP';
+      ga(ga_set, 'contentGroup2', uv.product.category);
+      ga(ga_set, 'contentGroup1', pageGroup);
+      ga(ga_send, 'pageview');
+      page_product();
       break;
+
+    /* BASKET */
     case 'basket':
       pageGroup = (thisUrl.indexOf('WorldPay-Cancel') > -1) ? 'Order Cancellation' : 'Basket';
+      ga(ga_set, 'contentGroup1', pageGroup);
+      ga(ga_send, 'pageview');
+      page_basket();
       break;
+
+    /* CHECKOUT */
     case 'checkout':
-       pageGroup = (thisUrl.indexOf('WorldPay-Cancel') > -1) ? 'Order Cancellation' : 'Checkout';
+      pageGroup = (thisUrl.indexOf('WorldPay-Cancel') > -1) ? 'Order Cancellation' : 'Checkout';
+      ga(ga_set, 'contentGroup1', pageGroup);
+      ga(ga_send, 'pageview');
+      if ( uv.page.breadcrumb == 'checkoutprogressindicator.billing') {
+        page_checkout();
+      }
       break;
+
+    /* CONFIRMATION */
     case 'confirmation':
       pageGroup = 'Order Confirmation';
+      ga(ga_set, 'contentGroup1', pageGroup);
+      ga(ga_send, 'pageview');
+      page_orderconf();
       break;
+
+    /* ALL OTHER PAGES */
     default:
       if ( isHelpPage ) {
         pageGroup = 'Help Pages'
@@ -74,126 +118,64 @@ function () {
       if (thisUrl.indexOf('blog') > -1) {
         pageGroup = 'Blog'
       }
+      ga(ga_set, 'contentGroup1', pageGroup);
+      ga(ga_send, 'pageview');
   }
 
-  ga(set, 'contentGroup1', pageGroup);
-
-  // SEND PAGEVIEW
-  ga(send, 'pageview');
-
-  // PAGE EVENTS
-  if (uv.page.type.toLowerCase() === 'basket') {
-    if ($('.error-message').length) {
-      try {
-        var error_str = $('.error-message').text();
-        if (error_str.length) {
-          sendEvent(['Basket', 'Error', error_str, {'nonInteraction': 1}]);
-        }
-      } catch (ignore) {}
-    }
-
-    for (var i = 0; i < uv.basket.line_items.length; i++) {
-      basketChange(false, 'add', uv.basket.line_items[i], uv.basket.line_items[i].quantity);
-    }
-    ga(ecSetAction, 'checkout', {
-      'step': 1,
-      'option': uv.basket.shipping_method
-    });
-    sendEvent(['Basket Page', 'Basket Viewed', {'nonInteraction': 1}]);
-    $('.remove').bind('click.basket_remove', function() {
-      basketChange('remove', uv.basket.line_items[$(this).index()], uv.basket.line_items[$(this).index()].quantity);
-    });
-    var initial_qty;
-    $('.cart-table-container .uf').on('focus.basket_edit', function() {
-      initial_qty = $(this).val();
-    }).on('change', function() {
-      var qty = Math.abs(initial_qty - $(this).val());
-      if (initial_qty > $(this).val()) {
-        basketChange('remove', uv.basket.line_items[$(this).index()], qty);
-      } else if (initial_qty < $(this).val()) {
-        basketChange('add', uv.basket.line_items[$(this).index()], qty);
+  //EVENTS, CUSTOM METRICS & CUSTOM DIMENSIONS
+  (function(){
+    // General error messages
+    $('.error-message').each(function(){
+      var error_str = $(this).text();
+      if ($.trim(error_str).length === 0 && $(this).is(":visible")) {
+        sendEvent(['Page Error', pgType, error_str, {'nonInteraction': 1}]);
       }
     });
-    $('[name="dwfrm_cart_checkoutCart"]').one('click.ga_checkout', function() {
-      sendEvent(['Basket Page', 'Checkout', 'Card Payment']);
-    });
-    $('[name="dwfrm_cart_expressCheckout"]').one('click.ga_checkout', function() {
-      ga(ecSetAction, 'checkout', {
-        'step': 2
-      });
-      ga(ecSetAction, 'checkout', {
-        'step': 3,
-        'option': 'Paypal Express'
-      });
-      sendEvent(['Basket Page', 'Checkout', 'Paypal Payment']);
-    });
-  }
-
-  if (uv.page.type.toLowerCase() === 'checkout' && uv.page.breadcrumb == 'checkoutprogressindicator.billing') {
-    ga(ecSetAction, 'checkout', {
-      'step': 2
-    });
-    sendEvent(['Your Details Page', 'Details Viewed', {'nonInteraction': 1}]);
-    var step3 = function(type) {
-      for (var i = 0; i < uv.basket.line_items.length; i++) {
-        ga(ecAddProduct, {
-          'id': uv.basket.line_items[i].product.sku_code,
-          'name': uv.basket.line_items[i].product.name,
-          'price': uv.basket.line_items[i].product.unit_sale_price,
-          'quantity': uv.basket.line_items[i].quantity,
-          'category': uv.basket.line_items[i].product.category
-        });
-      }
-      ga(ecSetAction, 'checkout', {
-        'step': 3,
-        'option': type
-      });
-      sendEvent(['Payment Page', 'Payment Options Viewed', {'nonInteraction': 1}]);
-    };
-    $('[name="dwfrm_billing_paymentMethods_selectedPaymentMethodID"]').on('click', function() {
-      step3($(this).val());
-    });
-  }
-
-  if (uv.page.type.toLowerCase() === 'confirmation') {
-    var trns = uv.transaction;
-    for (var j = 0; j < trns.line_items.length; j++) {
-      ga(ecAddProduct, {
-        'id': trns.line_items[j].product.sku_code,
-        'name': trns.line_items[j].product.name,
-        'price': trns.line_items[j].product.unit_sale_price,
-        'quantity': trns.line_items[j].quantity,
-        'category': trns.line_items[j].product.category
-      });
+    //Sign-up pop-up
+    if (thisUrl.indexOf('email_subscribe.html?eml_fld') > -1 ) {
+      sendEvent(['Login/Register', 'Pop-up Viewed', 'Newsletter Sign-up Pop-up Viewed']);
     }
-    ga(ecSetAction, 'purchase', {
-      'id': trns.order_id,
-      'affiliation': 'Ann Summers - Online - ' + trns.payment_type,
-      'revenue': trns.total,
-      'tax': trns.tax,
-      'shipping': trns.shipping_cost
+    //Registration sign-up
+    if (thisUrl.indexOf('registration') > -1 && uv.page.breadcrumb[0].toLowerCase() == 'my account') {
+      sendEvent(['Login/Register', 'Account Registered', 'New Account Created']);
+    }
+  })();
+
+  // PAGE EXECUTIONS
+  function page_plpsearch() {
+    var resultCount = $.trim($('.switch .count:eq(0)').text().replace(' Results', ''));
+    list = getListData();
+    listImpressions(list);
+    $(document).ajaxComplete(function(e, x, o) {
+      if (getUrlVars(o.url).sz && getUrlVars(o.url).format == 'page-element') {
+        var startPoint = getUrlVars(o.url).start;
+        listImpressions(list, startPoint);
+      } else if (getUrlVars(o.url).indexOf('srule') > -1) {
+        getPLPSort(true)
+      }
     });
-    sendEvent(['Confirmation Page', 'Order Made', {'nonInteraction': 1}]);
+
+    quickviewProductHandler();
   }
 
-  if (uv.page.type.toLowerCase() === 'product') {
-    ga(ecAddProduct, {
+  function page_product() {
+    ga(ga_ecAddProduct, {
       'id': uv.product.sku_code,
       'name': uv.product.name,
       'category': uv.product.category
     });
-    ga(ecSetAction, 'detail');
+    ga(ga_ecSetAction, 'detail');
     sendEvent(['Product Page', 'View', uv.product.name, {'nonInteraction': 1}]);
     $body.on('click.basket_add', '.add-to-cart', function() {
       if ($(this).prop('disabled')) return;
       var r = $(this).closest('.product-content'),
-        itm = {},
-        qty = 1;
+      itm = {},
+      qty = 1;
       try {
         var item_name = $.trim($('.product-name', r).children().text()),
-          item_id = $('input.pid', r).val(),
-          item_size = $('.size-attribute', r).length ? $('.swatches .selected .selected', r).text() : uv.product.size,
-          item_price = $('.product-sales-price', r).text() || uv.product.unit_sale_price;
+        item_id = $('input.pid', r).val(),
+        item_size = $('.size-attribute', r).length ? $('.swatches .selected .selected', r).text() : uv.product.size,
+        item_price = $('.product-sales-price', r).text() || uv.product.unit_sale_price;
         qty = $('.qty', r).val();
         itm.product = {
           'id': $.trim(item_id),
@@ -208,13 +190,13 @@ function () {
     $body.on('click.basket_add_all', '#add-all-to-cart', function() {
       $('.product-set-list .right-inner').each(function() {
         var r = $(this),
-          itm = {},
-          qty = 1;
+        itm = {},
+        qty = 1;
         try {
           if ($('.add-to-cart', r).length && !$('.add-to-cart', r).prop('disabled')) {
             var s = ($('.size li.selected', r).length) ? $.trim($('.size li.selected .selected', r).text()) : '',
-              item_name = $('.item-name', r),
-              item_id = item_name.prop('href');
+            item_name = $('.item-name', r),
+            item_id = item_name.prop('href');
             item_id = item_id.substring(item_id.lastIndexOf('/') + 1, item_id.lastIndexOf('.'));
             qty = $('.qty', r).val();
             itm.product = {
@@ -229,40 +211,135 @@ function () {
       });
     });
   }
-  if (uv.page.type.toLowerCase() === 'category' && !$('.categorylanding').length || uv.page.type.toLowerCase() === 'search') {
-    var resultCount = $.trim($('.switch .count:eq(0)').text().replace(' Results', ''));
-    list = getListData();
-    listImpressions(list);
-    $(document).ajaxComplete(function(e, x, o) {
-      if (getUrlVars(o.url).sz && getUrlVars(o.url).format == 'page-element') {
-        var startPoint = getUrlVars(o.url).start;
-        listImpressions(list, startPoint);
-      } else if (getUrlVars(o.url).indexOf('srule') > -1) {
-        getPLPSort(true)
-      }
+
+  function page_basket() {
+    addProducts(uv.basket.line_items);
+    gaCheckoutStep(1);
+    sendEvent(['Basket Page', 'Checkout', 'Basket Viewed', {'nonInteraction': 1}]);
+
+    // Listen for product changes
+    basketProductHandler();
+
+    $('[name="dwfrm_cart_checkoutCart"]').one('click.ga_checkout', function() {
+      //Update shipping method
+      gaCheckoutOption(1,uv.basket.shipping_method);
+      sendEvent(['Basket Page', 'Checkout', 'Card Payment']);
     });
 
+    $('[name="dwfrm_cart_expressCheckout"]').one('click.ga_checkout', function() {
+      //Update shipping method
+      gaCheckoutOption(1,uv.basket.shipping_method);
+
+      addProducts(uv.basket.line_items);
+      gaCheckoutStep(2);
+
+      addProducts(uv.basket.line_items);
+      gaCheckoutOption(3,'Paypal Express');
+      sendEvent(['Basket Page', 'Checkout', 'Paypal Payment']);
+    });
+  }
+
+  function page_checkout() {
+    addProducts(uv.basket.line_items);
+    gaCheckoutStep(2);
+    sendEvent(['Your Details Page', 'Checkout', 'Details Viewed', {'nonInteraction': 1}]);
+
+    $('[name="dwfrm_billing_paymentMethods_selectedPaymentMethodID"]').on('click', function() {
+      var paymenttype = $(this).val();
+      if ( $('.checkout-shipping-billing').valid() ) {
+        //Update shipping method
+        gaCheckoutOption(1,uv.basket.shipping_method);
+        addProducts(uv.basket.line_items);
+        gaCheckoutOption(3,paymenttype);
+        sendEvent(['Payment Page', 'Checkout', 'Payment Options Viewed', {'nonInteraction': 1}]);
+      }
+    });
+  }
+
+  function page_orderconf() {
+    var trns = uv.transaction;
+    addProducts(trns.line_items);
+    gaCheckoutOption(1,trns.shipping_method);
+
+    ga(ga_ecSetAction, 'purchase', {
+      'id': trns.order_id,
+      'affiliation': 'Ann Summers - Online',
+      'revenue': trns.total,
+      'tax': trns.tax,
+      'shipping': trns.shipping_cost
+    });
+    sendEvent(['Confirmation Page', 'Order Made', 'Order Confirmation', {'nonInteraction': 1}]);
+  }
+
+  // UTILITIES
+  /**
+   * function addProducts - Adds products to Enhance Ecommerce checkout
+   * @param {object} line_items - UV line_items object to iterate over
+   */
+  function addProducts (line_items) {
+    for (var i = 0; i < line_items.length; i++) {
+      ga(ga_ecAddProduct, {
+        'id': line_items[i].product.sku_code,
+        'name': line_items[i].product.name,
+        'price': line_items[i].product.unit_sale_price,
+        'quantity': line_items[i].quantity,
+        'category': line_items[i].product.category
+      });
+    }
+  }
+
+  /**
+   * function gaCheckoutOption - Sets a checkout step
+   * @param {integer} step - Checkout step number
+   */
+  function gaCheckoutStep(step) {
+    ga(ga_ecSetAction, 'checkout', {'step': step});
+    sendEvent(['Checkout', 'Checkout Step', step]);
+  }
+
+  /**
+   * function gaCheckoutOption - Sets a checkout option against a given checkout step
+   * @param {integer} step - Checkout step number
+   * @param {string} value - Checkout option value
+   */
+  function gaCheckoutOption(step, value) {
+    ga(ga_ecSetAction, 'checkout_option', {'step': step, 'option': value});
+    sendEvent(['Checkout', 'Checkout Option Set', value]);
+  }
+
+  /**
+   * function quickviewProductHandler - Binds events for quickview on PLP
+   */
+  function quickviewProductHandler () {
     $body.on('click.quickview', '.quickview-btn', function() {
       var itm = uv.listing.items[$('.quickview-btn').index(this)];
-      ga(ecAddProduct, {
+      ga(ga_ecAddProduct, {
         'id': itm.sku_code,
         'name': itm.name,
         'position': $('.quickview-btn').index(this) + 1
       });
-      ga(ecSetAction, 'click', {
+      ga(ga_ecSetAction, 'click', {
         'list': list.name
       });
       sendEvent(['Product List', 'Result Quick Viewed', list.name]);
+
+      ga(ga_ecAddProduct, {
+        'id': itm.sku_code,
+        'name': itm.name,
+        'category': itm.category
+      });
+      ga(ga_ecSetAction, 'detail');
+      sendEvent(['Product List', 'Quickview Product', itm.sku_code]);
     });
     $body.on('click.productview', '.name-link, .thumb-link', function() {
       var elem = $(this).hasClass('thumb-link') ? '.thumb-link' : '.name-link';
       var itm = uv.listing.items[$(elem).index(this)];
-      ga(ecAddProduct, {
+      ga(ga_ecAddProduct, {
         'id': itm.sku_code,
         'name': itm.name,
         'position': $(elem).index(this) + 1
       });
-      ga(ecSetAction, 'click', {
+      ga(ga_ecSetAction, 'click', {
         'list': list.name
       });
       sendEvent(['Product List', 'Result Clicked', list.name]);
@@ -274,12 +351,12 @@ function () {
     $body.on('click.basket_add', '#product-set-list .add-to-cart', function() {
       if ($(this).prop('disabled')) return;
       var r = $(this).closest('.right-inner'),
-        itm = {},
-        qty = 1;
+      itm = {},
+      qty = 1;
       try {
         var s = ($('.size li.selected', r).length) ? $.trim($('.size li.selected .selected', r).text()) : '',
-          item_name = $('.item-name', r),
-          item_id = item_name.prop('href');
+        item_name = $('.item-name', r),
+        item_id = item_name.prop('href');
         item_id = item_id.substring(item_id.lastIndexOf('/') + 1, item_id.lastIndexOf('.'));
         qty = $('.qty', r).val();
         itm.product = {
@@ -294,13 +371,13 @@ function () {
     $body.on('click.basket_add_all', '#add-all-to-cart', function() {
       $('.product-set-list .right-inner').each(function() {
         var r = $(this),
-          itm = {},
-          qty = 1;
+        itm = {},
+        qty = 1;
         try {
           if ($('.add-to-cart', r).length && !$('.add-to-cart', r).prop('disabled')) {
             var s = ($('.size li.selected', r).length) ? $.trim($('.size li.selected .selected', r).text()) : '',
-              item_name = $('.item-name', r),
-              item_id = item_name.prop('href');
+            item_name = $('.item-name', r),
+            item_id = item_name.prop('href');
             item_id = item_id.substring(item_id.lastIndexOf('/') + 1, item_id.lastIndexOf('.'));
             qty = $('.qty', r).val();
             itm.product = {
@@ -316,19 +393,25 @@ function () {
     });
   }
 
-  //EVENTS, CUSTOM METRICS & CUSTOM DIMENSIONS
-
-  //Sign-up pop-up
-  if ($.inArray('eml_fld', getUrlVars(thisUrl)) > -1 && uv.page.breadcrumb[0].toLowerCase() == 'my account') {
-    sendEvent(['Login/Register', 'Pop-up Viewed', 'Newsletter Sign-up Pop-up Viewed']);
+  /**
+   * function basketProductHandler - Binds events to watch for product add/removes at basket
+   */
+  function basketProductHandler () {
+    $('.remove').bind('click.basket_remove', function() {
+      basketChange('remove', uv.basket.line_items[$(this).index()], uv.basket.line_items[$(this).index()].quantity);
+    });
+    var initial_qty;
+    $('.cart-table-container .uf').on('focus.basket_edit', function() {
+      initial_qty = $(this).val();
+    }).on('change', function() {
+      var qty = Math.abs(initial_qty - $(this).val());
+      if (initial_qty > $(this).val()) {
+        basketChange('remove', uv.basket.line_items[$(this).index()], qty);
+      } else if (initial_qty < $(this).val()) {
+        basketChange('add', uv.basket.line_items[$(this).index()], qty);
+      }
+    });
   }
-  //Registration sign-up
-  if ($.inArray('registration', getUrlVars(thisUrl)) > -1 && uv.page.breadcrumb[0].toLowerCase() == 'my account') {
-    sendEvent(['Login/Register', 'Account Registered', 'New Account Created']);
-  }
-
-
-  // UTILITIES
 
   /**
    * function basketChange - Handles adding and removing products in the GA tracker object
@@ -340,7 +423,7 @@ function () {
     try {
       var item_price = '' + item.product.unit_sale_price.replace(/[^0-9\.]+/g, '');
       if (!isNaN(parseFloat(item_price))) {
-        ga(ecAddProduct, {
+        ga(ga_ecAddProduct, {
           'id': item.product.sku_code,
           'name': item.product.name,
           'variant': item.product.size || '',
@@ -350,26 +433,27 @@ function () {
         });
         if (operation) {
           if (operation == 'remove') {
-            ga(ecSetAction, 'remove');
+            ga(ga_ecSetAction, 'remove');
             sendEvent(['Remove From Bag', 'Click', quantity + ' x ' + item.product.name]);
           } else {
-            ga(ecSetAction, 'add');
+            ga(ga_ecSetAction, 'add');
             sendEvent(['Add To Bag', 'Click', quantity + ' x ' + item.product.name]);
           }
         }
       }
     } catch (ignore) {}
   }
+
   /**
    * function getListData
    */
-  function getListData() {
+   function getListData() {
     var listData = {
       'name': ''
     };
-    if (uv.page.type.toLowerCase() === 'search') {
+    if (pgType === 'search') {
       listData.name = 'S: ' + uv.page.breadcrumb[0];
-    } else if (uv.page.type === 'category') {
+    } else if (pgType === 'category') {
       listData.name = 'C: ' + uv.page.breadcrumb[uv.page.breadcrumb.length - 1];
     }
     listData.name = listData.name.toUpperCase();
@@ -378,6 +462,7 @@ function () {
 
   /**
    * function getPLPSort
+   * @param {boolean} fireEvent - True fires a GA event hit - False does not.
    */
   function getPLPSort(fireEvent) {
     try {
@@ -405,8 +490,8 @@ function () {
   function listImpressions(list, startPoint) {
 
     var arr = uv.listing.items,
-        items = 12;
-        start = startPoint ? Number(startPoint) : 0;
+    items = 12;
+    start = startPoint ? Number(startPoint) : 0;
 
     if (arr.length % items > 0) {
       var remainder = -Math.abs(arr.length % items);
@@ -417,7 +502,7 @@ function () {
 
     for (var i = 0; i < arr.length; i++) {
       try {
-        ga(ecAddImpression, {
+        ga(ga_ecAddImpression, {
           'id': arr[i].sku_code,
           'name': arr[i].name,
           'list': list.name,
@@ -436,7 +521,7 @@ function () {
    */
   function getUrlVars(url) {
     var vars = [],
-      hash;
+    hash;
     var hashes = url.slice(url.indexOf('?') + 1).split('&');
     for (var i = 0; i < hashes.length; i++) {
       hash = hashes[i].split('=');
@@ -455,16 +540,16 @@ function () {
   function sendEvent(event) {
     if (event instanceof Array) {
       if (event.length == 4) {
-        ga(send, 'event', '' + event[0], '' + event[1], '' + event[2], event[3])
+        ga(ga_send, 'event', '' + event[0], '' + event[1], '' + event[2], event[3])
       } else {
-        ga(send, 'event', '' + event[0], '' + event[1], '' + event[2])
+        ga(ga_send, 'event', '' + event[0], '' + event[1], '' + event[2])
       }
     } else {
       if (event && event.category && event.action && event.label) {
         if(event.options) {
-          ga(send, 'event', '' + event.category, '' + event.action, '' + event.label, event.options)
+          ga(ga_send, 'event', '' + event.category, '' + event.action, '' + event.label, event.options)
         } else {
-          ga(send, 'event', '' + event.category, '' + event.action, '' + event.label)
+          ga(ga_send, 'event', '' + event.category, '' + event.action, '' + event.label)
         }
       } else {
         console.log('Event argument object must contain: category, action and label e.g. sendEventToGA({\'category\':\'Video\',\'action\':\'Play\',\'label\':\'Summer Campaign Trailer\'})')
@@ -473,3 +558,4 @@ function () {
   }
   window.sendEventToGA = sendEvent;
 }
+
